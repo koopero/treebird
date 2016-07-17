@@ -1,0 +1,109 @@
+{
+  "buffer": {
+    "displace": {
+      "height": {},
+      "width": {}
+    },
+    "input": {
+      "height": {},
+      "width": {}
+    },
+    "output": {
+      "height": {},
+      "width": {}
+    }
+  },
+  "image": {
+    "displace": {
+      "src": "image/displace.png"
+    },
+    "input": {
+      "src": "image/fire.jpg"
+    }
+  },
+  "kinect": {},
+  "read": {},
+  "render": {
+    "output": {
+      "float": {
+        "amount": {
+          "value": 10
+        }
+      },
+      "shader": "displace",
+      "src": {
+        "buffer": "input",
+        "magFilter": "nearest",
+        "minFilter": "nearest",
+        "wrapH": "repeat",
+        "wrapV": "repeat"
+      },
+      "tex": {
+        "displace": {
+          "buffer": "displace",
+          "magFilter": "nearest",
+          "minFilter": "nearest",
+          "wrapH": "repeat",
+          "wrapV": "repeat"
+        },
+        "src": {
+          "buffer": "input",
+          "magFilter": "nearest",
+          "minFilter": "nearest",
+          "wrapH": "repeat",
+          "wrapV": "repeat"
+        }
+      }
+    }
+  },
+  "save": {},
+  "shader": {
+    "displace": {
+      "frag": {
+        "data": "#version 150\n\nuniform sampler2DRect displaceSampler;\nuniform sampler2DRect srcSampler;\n\nin vec2 srcCoord;\nin vec2 displaceCoord;\nin vec2 displaceAmount;\n\nout vec4 outputColour;\n\nvoid main()\n{\n  vec2 tex = srcCoord;\n\n  vec2 displace = texture(displaceSampler, displaceCoord ).xy;\n  displace *= vec2( 2.0, 2.0 );\n  displace -= vec2( 1.0, 1.0 );\n\n\n  tex += displace * displaceAmount;\n  vec4 c = texture(srcSampler, tex );\n\n  outputColour = vec4( c.r, c.g, c.b, c.a );\n}\n",
+        "src": "shader/displace.frag"
+      },
+      "vert": {
+        "data": "#version 150\n\n// these are for the programmable pipeline system and are passed in\n// by default from OpenFrameworks\nuniform mat4 modelViewMatrix;\nuniform mat4 projectionMatrix;\nuniform mat4 modelViewProjectionMatrix;\n\n// Loopin default src\nuniform sampler2DRect srcSampler;\nuniform mat4 srcMatrix;\n\n\n\n// Loopin feedback\n\n\n\n// openframeworks default model format\nin vec4 position;\nin vec4 color;\nin vec4 normal;\nin vec2 texcoord;\n\n// Loopin texture 'displace'\nuniform sampler2DRect displaceSampler;\nuniform mat4 displaceMatrix;\n\nuniform float amount;\n\n// varying\nout vec2 srcCoord;\nout vec2 displaceCoord;\nout vec2 displaceAmount;\n\n\nvoid main()\n{\n    // here we move the texture coordinates\n    srcCoord = vec2(texcoord.x, texcoord.y);\n    srcCoord = (srcMatrix*vec4(srcCoord.x,srcCoord.y,0,1)).xy;\n    srcCoord *= textureSize( srcSampler );\n\n    displaceCoord = vec2(texcoord.x, texcoord.y);\n    displaceCoord = (displaceMatrix*vec4(displaceCoord.x,displaceCoord.y,0,1)).xy;\n    displaceCoord *= textureSize( displaceSampler );\n\n    displaceAmount = textureSize( displaceSampler ) * amount;\n\n\n    // send the vertices to the fragment shader\n    gl_Position = modelViewProjectionMatrix * position;\n}\n",
+        "src": "shader/displace.vert"
+      }
+    },
+    "kinect_depth": {
+      "frag": {
+        "data": "#version 150\n\n// this is how we receive the texture\nuniform sampler2DRect tex0;\nin vec2 varyingtexcoord;\nout vec4 outputColor;\n\n\nfloat getDepth( vec2 coord ) {\n  return texture(tex0, coord).g;\n}\n\nconst ivec2 conv[] = ivec2[](\n  ivec2( -1, -1 ),\n  ivec2(  0, -1 ),\n  ivec2(  1, -1 ),\n  ivec2(  1,  0 ),\n  ivec2(  1,  1 ),\n  ivec2(  0,  1 ),\n  ivec2( -1,  1 ),\n  ivec2( -1,  0 )\n  //\n  // ivec2( -1, -2 ),\n  // ivec2(  0, -2 ),\n  // ivec2(  1, -2 ),\n  //\n  // ivec2( -1,  2 ),\n  // ivec2(  0,  2 ),\n  // ivec2(  1,  2 ),\n  //\n  // ivec2(  2, -1 ),\n  // ivec2(  2,  0 ),\n  // ivec2(  2,  1 ),\n  //\n  // ivec2( -2, -1 ),\n  // ivec2( -2,  0 ),\n  // ivec2( -2,  1 )\n);\n\nvoid main()\n{\n  float d = getDepth( varyingtexcoord );\n\n  if ( d != 0.0 ) {\n    outputColor = vec4( d, d, d, 1.0 );\n  } else {\n    int samples = 0;\n    float sum = 0.0;\n\n    for ( int i = 0; i < conv.length(); i ++ ) {\n      float n = getDepth( varyingtexcoord + conv[i] );\n      if ( n != 0.0 ) {\n        samples ++;\n        sum += n;\n      }\n    }\n\n    if ( samples == 0 ) {\n      outputColor = vec4( 0.5, 0.0, 0.0, 1.0 );\n    } else {\n      sum /= samples;\n      outputColor = vec4( sum, sum, sum, 1.0 );\n    }\n  }\n\n\n}\n",
+        "src": ""
+      },
+      "vert": {
+        "data": "",
+        "src": ""
+      }
+    },
+    "passthru": {
+      "frag": {
+        "data": "#version 150\n\nuniform sampler2DRect srcSampler;\n\n\nin vec2 vTex;\nout vec4 outputColour;\n\nvoid main()\n{\n  vec4 c = texture(srcSampler, vTex);\n\n  outputColour = vec4( c.r, c.g, c.b, c.a );\n  // outputColour.r = vTex.x;\n}\n",
+        "src": ""
+      },
+      "vert": {
+        "data": "#version 150\n\n// these are for the programmable pipeline system and are passed in\n// by default from OpenFrameworks\nuniform mat4 modelViewMatrix;\nuniform mat4 projectionMatrix;\nuniform mat4 textureMatrix;\nuniform mat4 modelViewProjectionMatrix;\n\n// Loopin default src\nuniform sampler2DRect srcSampler;\nuniform mat4 srcMatrix;\n\n// Loopin feedback\n\n\n// Loopin iterator\n\n\n// openframeworks default model format\nin vec4 position;\nin vec4 color;\nin vec4 normal;\nin vec2 texcoord;\n\n// varying\nout vec2 vTex;\n\n\nvoid main()\n{\n    // here we move the texture coordinates\n    vTex = vec2(texcoord.x, texcoord.y);\n    vTex = (srcMatrix*vec4(vTex.x,vTex.y,0,1)).xy;\n    vTex *= textureSize( srcSampler );\n    // vTex = texcoord;\n\n\n    // send the vertices to the fragment shader\n    gl_Position = modelViewProjectionMatrix * position;\n}\n",
+        "src": ""
+      }
+    },
+    "rainbow": {
+      "frag": {
+        "data": "#version 150\n\n// this is how we receive the texture\nuniform sampler2DRect src;\nuniform sampler2DRect src1;\n// this is how we receive the texture\nuniform mat3 srcMatrix;\nuniform mat3 src1Matrix;\n\nin vec2 v_tex;\nout vec4 outputColor;\n\nvoid main()\n{\n  // vec4 texV4 = vec4( v_tex.x, v_tex.y, 0.0, 1.0 );\n  // vec2 texSize = textureSize( src );\n  //\n  // vec4 c = texture(src, (texV4 * srcMatrix).xy * texSize );\n  // vec4 d = texture(src1, v_tex );\n\n  outputColor.r = v_tex.x;\n  outputColor.g = v_tex.y;\n  outputColor.b = 0.0 - v_tex.y;\n  outputColor.a = 1.0;\n\n\n  // outputColor = vec4( , v_tex.y, c.b * d.b, 1.0 );\n  // outputColor = vec4( 1.0, 1.0, 0.0, c.a );\n\n}\n",
+        "src": ""
+      },
+      "vert": {
+        "data": "#version 150\n\n// these are for the programmable pipeline system and are passed in\n// by default from OpenFrameworks\nuniform mat4 modelViewMatrix;\nuniform mat4 projectionMatrix;\nuniform mat4 textureMatrix;\nuniform mat4 modelViewProjectionMatrix;\n\nin vec4 position;\nin vec4 color;\nin vec4 normal;\nin vec2 texcoord;\n// this is the end of the default functionality\n\n// this is something we're creating for this shader\nout vec2 v_tex;\n\n\nvoid main()\n{\n    // here we move the texture coordinates\n    v_tex = texcoord;\n\n    // send the vertices to the fragment shader\n    gl_Position = modelViewProjectionMatrix * position;\n}\n",
+        "src": ""
+      }
+    }
+  },
+  "show": "output",
+  "text": {},
+  "window": {
+    "fullscreen": false,
+    "height": 720,
+    "width": 1280
+  }
+}
