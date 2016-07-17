@@ -1,11 +1,20 @@
+const _ = require('lodash')
+
 const format = require('./format')
     , style = require('./style')
     , options = require('./options')
+    , header = require('./header')
 
 exports.log = function ( data, opt ) {
-  opt = options( opt )
+  opt = options( arguments )
   opt.width = parseInt( opt.width ) || process.stdout.columns
-  process.stdout.write( format( data, opt ) )
+
+  var result = header( opt )
+  if ( result && !opt.indent )
+    opt.indent = '  '
+
+  result += format( data, opt )
+  process.stdout.write( result )
 }
 
 

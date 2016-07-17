@@ -9,6 +9,8 @@ const style = {
   string: chalk.white,
   function: chalk.magenta,
   empty: chalk.black,
+  type: chalk.underline,
+  path: chalk.magenta,
   longDelim: chalk.red,
   longString: chalk.grey,
   null: chalk.red,

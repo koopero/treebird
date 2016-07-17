@@ -5,17 +5,13 @@ const _ = require('lodash')
     , style = require('./style')
 
 function format( data, opt ) {
-
-  opt.maxLines = 5
-
-  var width = 0
+  var width = opt.width
 
   if ( process.stdout.columns )
     width = process.stdout.columns
 
   var _circular = []
-
-  var result = formatAnything( data, '', width )
+  var result = formatAnything( data, opt.indent, width )
   result = oneNewline( result )
   return result
 

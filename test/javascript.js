@@ -1,3 +1,7 @@
+/*
+  Test for things that can't be serialized.
+*/
+
 const treebird = require('../index')
 
 const data = {
