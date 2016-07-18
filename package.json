@@ -1,6 +1,6 @@
 {
   "name": "treebird",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Coloured YAML-style object logging",
   "main": "index.js",
   "bin": {

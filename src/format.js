@@ -1,8 +1,8 @@
 module.exports = format
 
 const _ = require('lodash')
-    , stripAnsi = require('strip-ansi')
     , style = require('./style')
+    , strlen = require('./strlen')
 
 function format( data, opt ) {
   var width = opt.width
@@ -11,29 +11,29 @@ function format( data, opt ) {
     width = process.stdout.columns
 
   var _circular = []
-  var result = formatAnything( data, opt.indent, width )
+  var result = formatAnything( data, opt.indent, width, opt.preIndent )
   result = oneNewline( result )
   return result
 
 
 
-  function formatAnything( data, indent, width ) {
+  function formatAnything( data, indent, width, preIndent ) {
     if ( data === undefined ) {
       return style.undefined( 'undefined' )
     } else if ( data === null ) {
       return style.null( 'null' )
     } else if ( _.isFunction( data ) ) {
-      return formatFunction( data, indent, width )
+      return formatFunction( data, indent, width, preIndent )
     } else if ( _.isArray( data ) ) {
-      return formatArray( data, indent, width )
+      return formatArray( data, indent, width, preIndent )
     } else if ( _.isObject( data ) ) {
-      return formatKeys( data, indent, width )
+      return formatKeys( data, indent, width, preIndent )
     } else if ( _.isNumber( data ) ) {
       return formatNumber( data )
     } else if ( _.isBoolean( data ) ) {
       return style.boolean( String(data) )
     } else if ( _.isString( data ) ) {
-      return formatString( data, indent, width  )
+      return formatString( data, indent, width, preIndent )
     }
   }
 
@@ -72,15 +72,16 @@ function format( data, opt ) {
     return str
   }
 
-  function formatKeys( data, indent, width ) {
+  function formatKeys( data, indent, width, preIndent ) {
     if ( _circular.indexOf( data ) != -1 )
       return style.circular('<CIRCULAR>')
 
     _circular.push( data )
 
     var pairs = _.map( data, function ( value, key ) {
-      var valueStr = formatAnything( value, indent + '  ', width - ( key.length + ': '.length ) )
-        , keyStr = style.key(key)+style.delim(': ')
+      var keyStr = style.key(key)+style.delim(': ')
+        , valueStr = formatAnything( value, indent + '  ', width - ( key.length + ': '.length ), strlen( keyStr ) + indent.length + 2 )
+
       var isMulti = valueStr.indexOf('\n') != -1
 
       return isMulti ?
@@ -97,13 +98,13 @@ function format( data, opt ) {
 
     var pairsStrLen = pairs.reduce( function ( length, str ) {
       length = length || 0
-      return length + stripAnsi( str ).length
+      return length + strlen( str )
     }, 0 )
 
     // delimiters
     pairsStrLen += ( pairs.length - 1 ) * 2 // ', '.length
 
-    var canCompress = width && pairsStrLen < width
+    var canCompress = width && pairsStrLen + preIndent < width
     var result
 
     if ( canCompress ) {
@@ -126,7 +127,7 @@ function format( data, opt ) {
     return result
   }
 
-  function formatArray( data, indent, width ) {
+  function formatArray( data, indent, width, preIndent ) {
     if ( _circular.indexOf( data ) != -1 )
       return style.circular('<CIRCULAR>')
 
@@ -151,13 +152,13 @@ function format( data, opt ) {
     if ( canCompress ) {
       var pairsStrLen = pairs.reduce( function ( length, str ) {
         length = length || 0
-        return length + stripAnsi( str ).length
+        return length + strlen( str )
       }, 0 )
 
       // delimiters
       pairsStrLen += ( pairs.length - 1 ) * 2 // ', '.length
 
-      if ( pairsStrLen > width )
+      if ( pairsStrLen > width - preIndent )
         canCompress = false
     }
 

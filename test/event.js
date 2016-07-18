@@ -9,5 +9,5 @@ const shortData = {
 
 var path = 'foo/path/'
 
-treebird( longData, 'longData', path )
+// treebird( longData, 'longData', path )
 treebird( shortData, 'shortData', path )

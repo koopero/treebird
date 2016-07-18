@@ -6,5 +6,6 @@ module.exports = require('boptions')({
   time: NaN,
   width: 0,
   indent: '',
+  preIndent: 0,
   floatDigits: 4,
 })
