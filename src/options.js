@@ -8,4 +8,5 @@ module.exports = require('boptions')({
   indent: '',
   preIndent: 0,
   floatDigits: 4,
+  stream: null
 })

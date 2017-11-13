@@ -8,7 +8,9 @@ const format = require('./format')
 
 exports.log = function ( data, opt ) {
   opt = options( arguments )
-  opt.width = parseInt( opt.width ) || process.stdout.columns
+
+  let stream = opt['stream'] || process.stdout
+  opt.width = parseInt( opt.width ) || stream.columns
 
   var result = header( opt )
   if ( result && !opt.indent )
@@ -17,7 +19,7 @@ exports.log = function ( data, opt ) {
   opt.preIndent = strlen( result )
 
   result += format( data, opt )
-  process.stdout.write( result )
+  stream.write( result )
 }
 
 

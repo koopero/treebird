@@ -22,6 +22,8 @@ function format( data, opt ) {
       return style.undefined( 'undefined' )
     } else if ( data === null ) {
       return style.null( 'null' )
+    } else if ( _.isBoolean( data ) ) {
+      return style.boolean( String(data) )
     } else if ( _.isFunction( data ) ) {
       return formatFunction( data, indent, width, preIndent )
     } else if ( _.isArray( data ) ) {
@@ -30,8 +32,6 @@ function format( data, opt ) {
       return formatKeys( data, indent, width, preIndent )
     } else if ( _.isNumber( data ) ) {
       return formatNumber( data )
-    } else if ( _.isBoolean( data ) ) {
-      return style.boolean( String(data) )
     } else if ( _.isString( data ) ) {
       return formatString( data, indent, width, preIndent )
     }
